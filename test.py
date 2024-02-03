@@ -22,7 +22,7 @@ class_to_name  = {1: 'NCR/NET', 2: 'ED', 4: 'ET'} # This is according to BraTS 2
 
 def inference(args, multimask_output, db_config, model, test_save_path=None):
     db_test = db_config['Dataset'](base_dir=args.volume_path, list_dir=args.list_dir, split='test_vol')
-    testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=1)
+    testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=1, drop_last = True)
     logging.info(f'{len(testloader)} test iterations per epoch')
     model.eval()
     metric_list = 0.0

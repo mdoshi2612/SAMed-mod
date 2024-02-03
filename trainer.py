@@ -51,7 +51,7 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
         random.seed(args.seed + worker_id)
 
     trainloader = DataLoader(db_train, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True,
-                             worker_init_fn=worker_init_fn)
+                             worker_init_fn=worker_init_fn, drop_last = True)
     if args.n_gpu > 1:
         model = nn.DataParallel(model)
     model.train()
@@ -127,7 +127,6 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
             writer.add_scalar('info/loss_dice', loss_dice, iter_num)
 
             logging.info('iteration %d : loss : %f, loss_ce: %f, loss_dice: %f' % (iter_num, loss.item(), loss_ce.item(), loss_dice.item()))
-
             if iter_num % 20 == 0:
                 image = image_batch[1, 0:1, :, :]
                 image = (image - image.min()) / (image.max() - image.min())
