@@ -69,6 +69,25 @@ def main(ct_scans_folder, effusions_folder, output_folder, test, min_value = -12
     print("Processing complete.")
 
 if __name__ == "__main__":
+
+    '''
+    To create training folder
+
+    python utils/create_preprocess_data.py --ct_scans_folder Pleural-Effusion/raw_data/ct_scans/ 
+    --effusions_folder Pleural-Effusion/raw_data/effusion_masks/ 
+    --output_folder Pleural-Effusion/preprocessed_data/training_data
+
+
+    To create testing folder 
+    python utils/create_preprocess_data.py --ct_scans_folder Pleural-Effusion/raw_data/ct_scans/ 
+    --effusions_folder Pleural-Effusion/raw_data/effusion_masks/ 
+    --output_folder Pleural-Effusion/preprocessed_data/testing_data 
+    --test
+    
+    Basically to create test folder, include --test flag and change the paths accordingly
+    '''
+
+
     parser = argparse.ArgumentParser(description="Process CT scans and effusion masks slices.")
     parser.add_argument("--ct_scans_folder", type=str, required=True, help="Path to the folder containing CT scans.")
     parser.add_argument("--effusions_folder", type=str, required=True, help="Path to the folder containing effusion masks.")
