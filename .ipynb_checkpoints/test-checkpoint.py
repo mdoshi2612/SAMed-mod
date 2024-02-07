@@ -18,7 +18,7 @@ from icecream import ic
 
 # Modify the class_to_name according to your dataset
 #class_to_name = {1: 'spleen', 2: 'right kidney', 3: 'left kidney', 4: 'gallbladder', 5: 'liver', 6: 'stomach', 7: 'aorta', 8: 'pancreas'}
-class_to_name  = {1: 'effusion'} # This is according to BraTS 2020
+class_to_name  = {1: 'NCR/NET', 2: 'ED', 4: 'ET'} # This is according to BraTS 2020
 
 def inference(args, multimask_output, db_config, model, test_save_path=None):
     db_test = db_config['Dataset'](base_dir=args.volume_path, list_dir=args.list_dir, split='test_vol')
@@ -27,7 +27,7 @@ def inference(args, multimask_output, db_config, model, test_save_path=None):
     model.eval()
     metric_list = 0.0
     for i_batch, sampled_batch in tqdm(enumerate(testloader)):
-        h, w = sampled_batch['image'].shape[1:]
+        h, w = sampled_batch['image'].shape[2:]
         image, label, case_name = sampled_batch['image'], sampled_batch['label'], sampled_batch['case_name'][0]
         metric_i = test_single_volume(image, label, model, classes=args.num_classes, multimask_output=multimask_output,
                                       patch_size=[args.img_size, args.img_size], input_size=[args.input_size, args.input_size],
@@ -68,7 +68,8 @@ if __name__ == '__main__':
     parser.add_argument('--output_dir', type=str, default='/output')
     parser.add_argument('--img_size', type=int, default=512, help='Input image size of the network')
     parser.add_argument('--input_size', type=int, default=224, help='The input size for training SAM model')
-    parser.add_argument('--seed', type=int, default=1234, help='random seed')
+    parser.add_argument('--seed', type=int,
+                        default=1234, help='random seed')
     parser.add_argument('--is_savenii', action='store_true', help='Whether to save results during inference')
     parser.add_argument('--deterministic', type=int, default=1, help='whether use deterministic training')
     parser.add_argument('--ckpt', type=str, default='checkpoints/sam_vit_b_01ec64.pth',
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     parser.add_argument('--module', type=str, default='sam_lora_image_encoder')
 
     args = parser.parse_args()
-
+    print(type(args.seed))
     if args.config is not None:
         # overwtite default configurations with config file\
         config_dict = config_to_dict(args.config)
@@ -92,7 +93,6 @@ if __name__ == '__main__':
     else:
         cudnn.benchmark = False
         cudnn.deterministic = True
-    
     random.seed(args.seed)
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)

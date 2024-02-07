@@ -14,6 +14,11 @@ from segment_anything import sam_model_registry
 from trainer import trainer_synapse
 from icecream import ic
 
+# example command line - python train.py —-root_path Pleural-Effusion/preprocessed_data/training_data/ —-output output/Train50_50_1_class/ -—dataset Pleural-Effusion —-list_dir Pleual-Effusion/lists/Train50_50 —-num_classes 1 —-ckpt checkpoints/sam_vit_b_01ec64.pth —-img_size 512 --n_gpu 4 --batch_size 2 --warmup
+
+# python train.py --root_path Pleural-Effusion/preprocessed_data/training_data/ --output output/Train200_200_1_class/ --dataset Pleural-Effusion --list_dir Pleural-Effusion/lists/Train200_200 --num_classes 1 --ckpt checkpoints/sam_vit_b_01ec64.pth --img_size 512 --n_gpu 4 --batch_size 2 --warmup
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--root_path', type=str,
                     default='/data/LarryXu/Synapse/preprocessed_data/train_npz', help='root dir for data')
