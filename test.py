@@ -20,31 +20,61 @@ from icecream import ic
 #class_to_name = {1: 'spleen', 2: 'right kidney', 3: 'left kidney', 4: 'gallbladder', 5: 'liver', 6: 'stomach', 7: 'aorta', 8: 'pancreas'}
 class_to_name  = {1: 'effusion'} # This is according to BraTS 2020
 
-def inference(args, multimask_output, db_config, model, test_save_path=None):
+def inference(args, multimask_output, db_config, model, test_save_path = None):
     db_test = db_config['Dataset'](base_dir=args.volume_path, list_dir=args.list_dir, split='test_vol')
+    debug_txt = os.path.join(args.output_dir, 'debug.txt')
     testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=1, drop_last = True)
     logging.info(f'{len(testloader)} test iterations per epoch')
     model.eval()
     metric_list = 0.0
-    for i_batch, sampled_batch in tqdm(enumerate(testloader)):
-        h, w = sampled_batch['image'].shape[1:]
-        image, label, case_name = sampled_batch['image'], sampled_batch['label'], sampled_batch['case_name'][0]
-        metric_i = test_single_volume(image, label, model, classes=args.num_classes, multimask_output=multimask_output,
-                                      patch_size=[args.img_size, args.img_size], input_size=[args.input_size, args.input_size],
-                                      test_save_path=test_save_path, case=case_name, z_spacing=db_config['z_spacing'])
-        metric_list += np.array(metric_i)
-        logging.info('idx %d case %s mean_dice %f mean_hd95 %f' % (
-            i_batch, case_name, np.mean(metric_i, axis=0)[0], np.mean(metric_i, axis=0)[1]))
-    metric_list = metric_list / len(db_test)
-    for i in range(1, args.num_classes + 1):
-        try:
-            logging.info('Mean class %d name %s mean_dice %f mean_hd95 %f' % (i, class_to_name[i], metric_list[i - 1][0], metric_list[i - 1][1]))
-        except:
-            logging.info('Mean class %d mean_dice %f mean_hd95 %f' % (i, metric_list[i - 1][0], metric_list[i - 1][1]))
-    performance = np.mean(metric_list, axis=0)[0]
-    mean_hd95 = np.mean(metric_list, axis=0)[1]
-    logging.info('Testing performance in best val model: mean_dice : %f mean_hd95 : %f' % (performance, mean_hd95))
-    logging.info("Testing Finished!")
+    if args.debug:
+        with open(debug_txt, 'w') as file:
+            for i_batch, sampled_batch in tqdm(enumerate(testloader)):
+                h, w = sampled_batch['image'].shape[1:]
+                image, label, case_name = sampled_batch['image'], sampled_batch['label'], sampled_batch['case_name'][0]
+                metric_i = test_single_volume(image, label, model, classes=args.num_classes, multimask_output=multimask_output,
+                                            patch_size=[args.img_size, args.img_size], input_size=[args.input_size, args.input_size],
+                                            test_save_path=test_save_path, case=case_name, z_spacing=db_config['z_spacing'])
+                metric_list += np.array(metric_i)
+                logging.info('idx %d case %s mean_dice %f mean_hd95 %f' % (
+                    i_batch, case_name, np.mean(metric_i, axis=0)[0], np.mean(metric_i, axis=0)[1]))
+                if(np.mean(metric_i, axis=0)[0] < 0.7):
+                    file.write(case_name + ' ' + str(np.mean(metric_i, axis=0)[0]) + '\n')
+            metric_list = metric_list / len(db_test)
+            for i in range(1, args.num_classes + 1):
+                try:
+                    logging.info('Mean class %d name %s mean_dice %f mean_hd95 %f' % (i, class_to_name[i], metric_list[i - 1][0], metric_list[i - 1][1]))
+                except:
+                    logging.info('Mean class %d mean_dice %f mean_hd95 %f' % (i, metric_list[i - 1][0], metric_list[i - 1][1]))
+            performance = np.mean(metric_list, axis=0)[0]
+            mean_hd95 = np.mean(metric_list, axis=0)[1]
+            logging.info('Testing performance in best val model: mean_dice : %f mean_hd95 : %f' % (performance, mean_hd95))
+            logging.info("Testing Finished!")
+
+    else:
+        for i_batch, sampled_batch in tqdm(enumerate(testloader)):
+            h, w = sampled_batch['image'].shape[1:]
+            image, label, case_name = sampled_batch['image'], sampled_batch['label'], sampled_batch['case_name'][0]
+            metric_i = test_single_volume(image, label, model, classes=args.num_classes, multimask_output=multimask_output,
+                                        patch_size=[args.img_size, args.img_size], input_size=[args.input_size, args.input_size],
+                                        test_save_path=test_save_path, case=case_name, z_spacing=db_config['z_spacing'])
+            metric_list += np.array(metric_i)
+            logging.info('idx %d case %s mean_dice %f mean_hd95 %f' % (
+                i_batch, case_name, np.mean(metric_i, axis=0)[0], np.mean(metric_i, axis=0)[1]))
+            if(np.mean(metric_i, axis=0)[0] < 0.7):
+                file.write('case %s \n' % (case_name))
+        metric_list = metric_list / len(db_test)
+        for i in range(1, args.num_classes + 1):
+            try:
+                logging.info('Mean class %d name %s mean_dice %f mean_hd95 %f' % (i, class_to_name[i], metric_list[i - 1][0], metric_list[i - 1][1]))
+            except:
+                logging.info('Mean class %d mean_dice %f mean_hd95 %f' % (i, metric_list[i - 1][0], metric_list[i - 1][1]))
+        performance = np.mean(metric_list, axis=0)[0]
+        mean_hd95 = np.mean(metric_list, axis=0)[1]
+        logging.info('Testing performance in best val model: mean_dice : %f mean_hd95 : %f' % (performance, mean_hd95))
+        logging.info("Testing Finished!")
+
+
     return 1
 
 
@@ -77,7 +107,7 @@ if __name__ == '__main__':
     parser.add_argument('--vit_name', type=str, default='vit_b', help='Select one vit model')
     parser.add_argument('--rank', type=int, default=4, help='Rank for LoRA adaptation')
     parser.add_argument('--module', type=str, default='sam_lora_image_encoder')
-
+    parser.add_argument('--debug', action='store_true', default=False)
     args = parser.parse_args()
 
     if args.config is not None:
@@ -130,6 +160,7 @@ if __name__ == '__main__':
     # initialize log
     log_folder = os.path.join(args.output_dir, 'test_log')
     os.makedirs(log_folder, exist_ok=True)
+
     logging.basicConfig(filename=log_folder + '/' + 'log.txt', level=logging.INFO,
                         format='[%(asctime)s.%(msecs)03d] %(message)s', datefmt='%H:%M:%S')
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
