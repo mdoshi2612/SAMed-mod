@@ -20,7 +20,7 @@ if __name__ == "__main__":
     parser.add_argument("--output_txt", help="Path to the output text file.")
     parser.add_argument("--num_files_from_1", type=int, help="Number of files to randomly select form file 1.")
     parser.add_argument("--num_files_from_2", type=int, help="Number of files to randomly select from file 2.")
-    parser.add_argument("--test", default='/home/manav/SAMed-mod/Pleural-Effusion/lists/test_vol_with_area.txt')
+    parser.add_argument("--test", default='/home/manav/SAMed-mod/Pleural-Effusion/lists/main/test_vol_with_area.txt')
     args = parser.parse_args()
     
     

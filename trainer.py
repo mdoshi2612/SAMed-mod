@@ -74,6 +74,8 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
     best_performance = 0.0
     iterator = tqdm(range(max_epoch), ncols=70)
 
+    loss_txt = open(os.path.join(snapshot_path, 'losses.txt'), 'a')
+
     # for i_batch, sampled_batch in enumerate(trainloader):
     #     image_batch, label_batch = sampled_batch['image'], sampled_batch['label']  # [b, c, h, w], [b, h, w]
     #     low_res_label_batch = sampled_batch['low_res_label']
@@ -82,6 +84,10 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
     #     print(f"Unique values in low_res_label_batch: {get_tensor_unique_values(low_res_label_batch)}")
 
     for epoch_num in iterator:
+
+        epoch_ce_loss = 0
+        epoch_dice_loss = 0
+
         for i_batch, sampled_batch in enumerate(trainloader):
             image_batch, label_batch = sampled_batch['image'], sampled_batch['label']  # [b, c, h, w], [b, h, w]
             print(f"label batch: {len(label_batch)} and image batch: {len(image_batch)}")
@@ -106,6 +112,11 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
+            epoch_ce_loss += loss_ce.item()
+            epoch_dice_loss += loss_dice.item()
+            loss_txt.write(f'Epoch Number {epoch_num} Cross Entropy Loss {epoch_ce_loss}, Dice Loss {epoch_dice_loss} \n')
+
             if args.warmup and iter_num < args.warmup_period:
                 lr_ = base_lr * ((iter_num + 1) / args.warmup_period)
                 for param_group in optimizer.param_groups:
@@ -156,5 +167,7 @@ def trainer_synapse(args, model, snapshot_path, multimask_output, low_res):
             iterator.close()
             break
 
+
+    loss_txt.close()
     writer.close()
     return "Training Finished!"
